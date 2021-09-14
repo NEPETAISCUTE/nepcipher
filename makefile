@@ -9,4 +9,4 @@ outfiles = -o nepcipher
 libver:
 	g++ -g -I./src/include src/nepcipher.c++ $(libs) $(outfiles)
 saver:
-	g++ -g -I./src/include src/nepcipher.c++ src/util/nepstring.c $(outfiles)
+	g++ -g -I./src/include src/nepcipher.c++ src/nepstring.c $(outfiles)
