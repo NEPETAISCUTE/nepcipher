@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         {
             if(strcmp(param,"-h"))
             {
-                printf("nepcipher ©Nepeta september 8 2021\n\n\n-o filename: selects a file output\n-k key:      selects a key\n-c:          sets operation mode to ciphering\n-d:          sets operation mode to deciphering\n--stdin text: selects stdin for input (the text put after becomes the text to cipher)\n--stdout: sets the output to console\n--offset number: sets an offset for the key (for instance, an offset of 39 would add 39 to each character of the key before the ciphering/deciphering)\n");
+                printf(u8"nepcipher ©Nepeta september 8 2021\n\n\n-o filename: selects a file output\n-k key:      selects a key\n-c:          sets operation mode to ciphering\n-d:          sets operation mode to deciphering\n--stdin text: selects stdin for input (the text put after becomes the text to cipher)\n--stdout: sets the output to console\n--offset number: sets an offset for the key (for instance, an offset of 39 would add 39 to each character of the key before the ciphering/deciphering)\n");
                 return 0;
             }
             else if(strcmp(param,"-o"))
