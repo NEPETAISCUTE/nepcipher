@@ -7,4 +7,6 @@ opts = -g
 outfiles = -o bin/nepcipher
 
 libver:
+	g++ -g -I./src/include -Wall src/nepcipher.c++ $(libs) $(outfiles)
+release:
 	g++ -I./src/include -Wall src/nepcipher.c++ $(libs) $(outfiles)
