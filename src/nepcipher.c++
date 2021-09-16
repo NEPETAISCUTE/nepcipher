@@ -14,6 +14,7 @@ int main(int argc, char** argv)
     int desallocoutname = 0;
     int* offset = 0;
     int offsetsize = 0;
+    int keyfile = 0;
 
     pointerlen offsetmulti;
 
@@ -40,7 +41,22 @@ int main(int argc, char** argv)
             }
             else if(strcmp(param,"-k"))
             {
+                if(key!=NULL)
+                {
+                    fprintf(stderr, "cannot take 2 keys, please try \"nepcipher -h\" for help\n");
+                    return -1;
+                }
                 key = argv[i];
+            }
+            else if(strcmp(param,"-kf"))
+            {
+                if(key!=NULL)
+                {
+                    fprintf(stderr, "cannot take 2 keys, please try \"nepcipher -h\" for help\n");
+                    return -1;
+                }
+                key = argv[i];
+                keyfile = 1;
             }
             else if(strcmp(param,"-c") && otype == OTYPE_UNDEFINED)
             {
@@ -105,7 +121,7 @@ int main(int argc, char** argv)
                 }
                 else
                 {
-                    fprintf(stderr,"offset already set to %d before %s\n",offset,argv[i]);
+                    fprintf(stderr,"offset already set to a number or array before before %s\n",argv[i]);
                     return -1;
                 }
             }
@@ -163,11 +179,15 @@ int main(int argc, char** argv)
             fprintf(stderr,"couldn't allocate memory for output file name placeholder\n");
             return -1;
         }
+        strcpy(ofname, temp, 6);
         desallocoutname = 1;
     }
+    keyfiledat keydat;
+    keydat.key = key;
+    keydat.keyfile = keyfile;
     operationType* otypeptr = &otype;
     fileAllocPointers desalloc;
-    operation(ifname, ofname, key, offset, offsetsize, otypeptr, stdinput, stdoutput, &desalloc);
+    operation(ifname, ofname, &keydat, offset, offsetsize, otypeptr, stdinput, stdoutput, &desalloc);
     if(!stdinput)
     {
         if(desalloc.ifile==NULL) 
@@ -203,7 +223,15 @@ int main(int argc, char** argv)
         else
             free(desalloc.buffer);
     }
-
+    
+    if(desalloc.keybuffer==NULL)
+    {
+        fprintf(stderr, "could not allocate memory for key buffer.\n");
+        return -1;
+    }
+    else
+        free(desalloc.keybuffer);
+        
     if(desallocoutname)
     {
         free(ofname);
@@ -212,12 +240,13 @@ int main(int argc, char** argv)
 }
 
 /*proceeds to run whatever operation the user asked for*/
-int operation(string ifname, string ofname, string key, int* offset, int offsetsize, operationType* otypeptr, int stdinput, int stdoutput, fileAllocPointers* returnvalueptr)
+int operation(string ifname, string ofname, keyfiledat* key, int* offset, int offsetsize, operationType* otypeptr, int stdinput, int stdoutput, fileAllocPointers* returnvalueptr)
 {
     operationType otype = *otypeptr;
     (*returnvalueptr).ifile = NULL;
     (*returnvalueptr).ofile = NULL;
     (*returnvalueptr).buffer = NULL;
+    (*returnvalueptr).keybuffer = NULL;
 
     FILE* ifile = NULL;
 
@@ -269,6 +298,42 @@ int operation(string ifname, string ofname, string key, int* offset, int offsets
         
         fread(buf, 1, fsize, ifile);
     }
+
+    char* kbuf = NULL;
+    if((*key).keyfile)
+    {
+        FILE* kfile = NULL;
+        kfile = fopen((*key).key,"rb");
+        if(kfile==NULL)
+        {
+            return -1;
+        }
+
+        fseek(kfile, 0, SEEK_END);
+        fsize = ftell(kfile);
+        rewind(kfile);
+
+        kbuf = (char*)malloc(fsize);
+        if(kbuf==NULL)
+        {
+            return -1;
+        }
+
+        fread(kbuf, 1, fsize, kfile);
+
+        fclose(kfile);
+    }
+    else
+    {
+        fsize = strlen((*key).key)+1;
+        kbuf = (char*)malloc(fsize*sizeof(char));
+        if(kbuf==NULL)
+        {
+            return -1;
+        }
+        strcpy(kbuf, (*key).key, fsize);
+    }
+    (*returnvalueptr).keybuffer = kbuf;
     int deciphernum;
     if(otype==OTYPE_CIPHER)
         deciphernum = DEC_FALSE;
@@ -276,7 +341,7 @@ int operation(string ifname, string ofname, string key, int* offset, int offsets
     else if(otype==OTYPE_DECIPHER)
         deciphernum = DEC_TRUE;
 
-    cipher(buf, key, fsize, offset, offsetsize, deciphernum);
+    cipher(buf, kbuf, fsize, offset, offsetsize, deciphernum);
 
     if(stdoutput)
     {

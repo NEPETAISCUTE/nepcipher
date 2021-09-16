@@ -22,6 +22,8 @@ int strlen(const char* str);
 
 int strtoint(const char* str);
 
+int strcpy(char * target, const char* source, int length);
+
 int strsplit(const char* str, char sep, pointerlen* returnptrptr);
 
 #ifdef __cplusplus
