@@ -28,6 +28,6 @@ typedef struct keyfile {
 #define DEC_TRUE -1
 
 int operation(string ifname, string ofname, keyfiledat* key, int* offset, int offsetsize, operationType* otypeptr, int stdinput, int stdoutput, fileAllocPointers* returnvalueptr);
-void cipher(string buf, string key, int fsize, int* offset, int offsetsize, int decipher);
+void cipher(string buf, string key, int* offset, int offsetsize, int decipher);
 
 #endif /*NEPCIPHER_H*/

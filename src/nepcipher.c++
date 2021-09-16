@@ -300,6 +300,7 @@ int operation(string ifname, string ofname, keyfiledat* key, int* offset, int of
     }
 
     char* kbuf = NULL;
+    int ksize = 0;
     if((*key).keyfile)
     {
         FILE* kfile = NULL;
@@ -310,28 +311,28 @@ int operation(string ifname, string ofname, keyfiledat* key, int* offset, int of
         }
 
         fseek(kfile, 0, SEEK_END);
-        fsize = ftell(kfile);
+        ksize = ftell(kfile);
         rewind(kfile);
 
-        kbuf = (char*)malloc(fsize);
+        kbuf = (char*)malloc(ksize * sizeof(char));
         if(kbuf==NULL)
         {
             return -1;
         }
 
-        fread(kbuf, 1, fsize, kfile);
+        fread(kbuf, 1, ksize, kfile);
 
         fclose(kfile);
     }
     else
     {
-        fsize = strlen((*key).key)+1;
-        kbuf = (char*)malloc(fsize*sizeof(char));
+        ksize = strlen((*key).key)+1;
+        kbuf = (char*)malloc(ksize*sizeof(char));
         if(kbuf==NULL)
         {
             return -1;
         }
-        strcpy(kbuf, (*key).key, fsize);
+        strcpy(kbuf, (*key).key, ksize);
     }
     (*returnvalueptr).keybuffer = kbuf;
     int deciphernum;
@@ -341,7 +342,7 @@ int operation(string ifname, string ofname, keyfiledat* key, int* offset, int of
     else if(otype==OTYPE_DECIPHER)
         deciphernum = DEC_TRUE;
 
-    cipher(buf, kbuf, fsize, offset, offsetsize, deciphernum);
+    cipher(buf, kbuf, offset, offsetsize, deciphernum);
 
     if(stdoutput)
     {
@@ -355,11 +356,12 @@ int operation(string ifname, string ofname, keyfiledat* key, int* offset, int of
     return 0;
 }
 /*proceeds to cipher/decipher the buffer using the key*/
-void cipher(string buf, string key, int fsize, int* offset, int offsetsize, int decipher)
+void cipher(string buf, string key, int* offset, int offsetsize, int decipher)
 {
     int ksize = strlen(key);
     int ikey = 0;
     int offseti = 0;
+    int fsize = strlen(buf);
 
     for(int i = 0; i < fsize; i++)
     {
